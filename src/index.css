@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Beckett";
+  src: url("../font/BECKETT_.TTF") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lavinia";
+  src: url("../font/Lavinia.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pricedown";
+  src: url("../font/Pricedown Bl.otf") format("opentype");
+  font-display: swap;
+}
+
+:root {
+  font-family: "Lavinia", "Arial Narrow", sans-serif;
+  color: #dce5ff;
+  background: #000;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; background: #000; }
+button, input { font: inherit; }
+
+.game-screen {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #000;
+  color: #dce5ff;
+}
+
+.game-screen::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: .045;
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.85'/%3E%3C/svg%3E");
+}
+
+.game-title {
+  margin: 0;
+  font-family: "Beckett", "Old English Text MT", serif;
+  font-size: clamp(2.2rem, 4vw, 4.15rem);
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: .035em;
+  color: #e7edff;
+  text-shadow: 0 2px 1px #000, 0 0 12px rgb(179 196 255 / .18);
+}
+
+.game-page {
+  width: min(92vw, 42rem);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: clamp(2rem, 7vh, 5rem) 0 3rem;
+}
+
+.game-page .game-title { margin-bottom: 2.5rem; }
+
+.game-panel {
+  border: 1px solid rgb(159 177 227 / .25);
+  border-radius: 0;
+  background: rgb(7 9 15 / .82);
+  box-shadow: inset 0 0 24px rgb(111 132 196 / .04);
+}
+
+.game-action, .game-back {
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: color .16s ease, background-color .16s ease;
+}
+
+.game-action { background: #202c4a; color: #eff3ff; }
+.game-action:hover { background: #394d7c; }
+.game-back { padding: 0; background: transparent; color: #9eabc9; }
+.game-back:hover { color: #f0f4ff; }
+
+/* Mantiene visibles los iconos nativos para abrir fecha y hora en fondos oscuros. */
+.game-panel input[type="date"],
+.game-panel input[type="time"] {
+  color-scheme: dark;
+}
+
+.menu-banner {
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  right: 0;
+  width: min(52vw, 53rem);
+  height: clamp(13rem, 34vh, 23rem);
+  overflow: hidden;
+  clip-path: polygon(25% 0, 100% 0, 100% 100%, 12% 67%);
+}
+
+.menu-banner img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  opacity: .72; filter: saturate(1) contrast(.95) brightness(.9);
+}
+
+.menu-banner::after {
+  position: absolute; inset: 0; content: "";
+  background: linear-gradient(90deg, #000 0%, rgb(0 0 0 / .62) 21%, transparent 63%),
+    linear-gradient(180deg, transparent 42%, #000 96%);
+}
+
+.menu-header { position: absolute; top: clamp(2rem, 7vh, 4.5rem); left: clamp(1.5rem, 19vw, 15rem); }
+
+.game-menu {
+  position: absolute;
+  top: clamp(12rem, 27vh, 18rem);
+  left: clamp(2.2rem, 35vw, 31rem);
+  display: grid;
+  gap: clamp(.7rem, 2.1vh, 1.2rem);
+  padding: 0;
+}
+
+.game-menu-item {
+  display: grid;
+  grid-template-columns: 1.7rem auto;
+  align-items: center;
+  gap: .75rem;
+  min-width: 17rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #68718a;
+  cursor: pointer;
+  font-family: "Lavinia", "Arial Narrow", sans-serif;
+  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+  line-height: 1;
+  letter-spacing: .14em;
+  text-align: left;
+  text-transform: uppercase;
+  text-shadow: 0 0 7px rgb(126 145 197 / .12);
+  transition: color .14s ease, text-shadow .14s ease;
+}
+
+.game-menu-item:hover, .game-menu-item:focus-visible { color: #bfc9e4; outline: none; }
+.game-menu-item.is-active { color: #edf2ff; text-shadow: 0 0 9px rgb(204 218 255 / .35); }
+.game-menu-marker { visibility: hidden; font-size: 1.55em; line-height: 0; }
+.game-menu-item.is-active .game-menu-marker { visibility: visible; }
+
+@media (max-width: 640px) {
+  .menu-banner { width: 88vw; height: 15rem; clip-path: polygon(17% 0, 100% 0, 100% 100%, 0 70%); }
+  .menu-header { left: 8vw; }
+  .game-menu { top: 33vh; left: 12vw; }
+  .game-menu-item { min-width: 15rem; }
+}
