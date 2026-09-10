@@ -19,8 +19,8 @@ export default function Contacto({ cambiarPantalla }) {
         {/* Horarios */}
         <div>
           <h3 className="text-slate-100 font-semibold mb-1">Horarios de Atención</h3>
-          <p className="text-sm text-gray-300">Lunes a Sábado: 09:00 - 20:00 hs</p>
-          <p className="text-sm text-gray-300">Domingos: Cerrado</p>
+          <p className="text-sm text-gray-300">Lunes a Sábado: 9:00 a 23:00 hs</p>
+          <p className="text-sm text-gray-300">Domingos: 10:00 a 18:00 hs</p>
         </div>
 
         <hr className="border-zinc-800" />
@@ -28,7 +28,7 @@ export default function Contacto({ cambiarPantalla }) {
         {/* Ubicación */}
         <div>
           <h3 className="text-slate-100 font-semibold mb-1">Dirección</h3>
-          <p className="text-sm text-gray-300">Barrio Santa Bárbara</p>
+          <p className="text-sm text-gray-300">Barrio Sofía, Santa Bárbara</p>
           <p className="text-sm text-gray-300">Aguilares, Tucumán, Argentina</p>
         </div>
 

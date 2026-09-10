@@ -1,5 +1,10 @@
 import { useState } from 'react';
 
+function formatoHora(hora) {
+  const [horas, minutos] = hora.split(':').map(Number);
+  return `${horas % 12 || 12}:${String(minutos).padStart(2, '0')} ${horas >= 12 ? 'PM' : 'AM'}`;
+}
+
 export default function CancelarTurno({ cambiarPantalla, buscarReserva, cancelarReservaPorCodigo }) {
   const [codigoBusqueda, setCodigoBusqueda] = useState('');
   const [reservaEncontrada, setReservaEncontrada] = useState(null);
@@ -63,7 +68,7 @@ export default function CancelarTurno({ cambiarPantalla, buscarReserva, cancelar
             <h3 className="text-lg font-bold text-gray-100 mb-2">Reserva encontrada</h3>
             <p className="text-sm text-gray-300 mb-1">Cliente: <span className="font-semibold text-white">{reservaEncontrada.nombre}</span></p>
             <p className="text-sm text-gray-300 mb-1">Fecha: <span className="font-semibold text-white">{reservaEncontrada.fecha}</span></p>
-            <p className="text-sm text-gray-300 mb-4">Hora: <span className="font-semibold text-white">{reservaEncontrada.hora}</span> hs</p>
+            <p className="text-sm text-gray-300 mb-4">Hora: <span className="font-semibold text-white">{formatoHora(reservaEncontrada.hora)}</span></p>
             <button onClick={handleConfirmarCancelacion} disabled={cargando} className="game-action w-full font-bold py-3 px-4 disabled:cursor-wait disabled:opacity-60">
               {cargando ? 'Cancelando...' : 'Confirmar cancelación'}
             </button>

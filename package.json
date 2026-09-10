@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "dev:api": "node --env-file=.env server/index.js",
+    "dev:api": "node --env-file=.env server/local.js",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server/index.js",
+    "start": "node server/local.js",
     "db:init": "psql \"$DATABASE_URL\" -f database/schema.sql"
   },
   "keywords": [],
@@ -16,6 +16,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "express": "^5.2.1",
     "lucide-react": "^1.42.0",
     "pg": "^8.23.0",

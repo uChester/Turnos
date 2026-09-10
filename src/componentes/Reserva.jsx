@@ -1,14 +1,37 @@
 import { useState } from 'react';
 
-export default function Reserva({ cambiarPantalla, crearReserva }) {
+function formatoHora(hora) {
+  const [horas, minutos] = hora.split(':').map(Number);
+  return `${horas % 12 || 12}:${String(minutos).padStart(2, '0')} ${horas >= 12 ? 'PM' : 'AM'}`;
+}
+
+export default function Reserva({ cambiarPantalla, crearReserva, consultarDisponibilidad }) {
   const [datosReserva, setDatosReserva] = useState({ nombre: '', telefono: '', fecha: '', hora: '' });
   const [reservaConfirmada, setReservaConfirmada] = useState(null);
   const [mensajeError, setMensajeError] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [horarios, setHorarios] = useState([]);
+  const [cargandoHorarios, setCargandoHorarios] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
-    setDatosReserva((datos) => ({ ...datos, [name]: value }));
+    if (name !== 'fecha') {
+      setDatosReserva((datos) => ({ ...datos, [name]: value }));
+      return;
+    }
+    setDatosReserva((datos) => ({ ...datos, fecha: value, hora: '' }));
+    setHorarios([]);
+    setMensajeError('');
+    if (!value) return;
+    setCargandoHorarios(true);
+    try {
+      const disponibilidad = await consultarDisponibilidad(value);
+      setHorarios(disponibilidad.horarios.filter(({ disponible }) => disponible).map(({ hora }) => hora));
+    } catch (error) {
+      setMensajeError(error.message);
+    } finally {
+      setCargandoHorarios(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -38,7 +61,7 @@ export default function Reserva({ cambiarPantalla, crearReserva }) {
             </div>
             <p className="text-xs text-gray-400 mb-6">
               Cliente: <span className="text-white">{reservaConfirmada.nombre}</span><br />
-              Fecha: <span className="text-white">{reservaConfirmada.fecha}</span> a las <span className="text-white">{reservaConfirmada.hora}</span> hs
+              Fecha: <span className="text-white">{reservaConfirmada.fecha}</span> a las <span className="text-white">{formatoHora(reservaConfirmada.hora)}</span>
             </p>
             <button onClick={() => cambiarPantalla('MENU')} className="game-action w-full font-bold py-3 px-4">
               Volver al Menú Principal
@@ -72,8 +95,12 @@ export default function Reserva({ cambiarPantalla, crearReserva }) {
           </div>
           <div>
             <label className="block text-gray-300 mb-1 text-sm" htmlFor="hora">Hora:</label>
-            <input id="hora" type="time" name="hora" value={datosReserva.hora} onChange={handleChange} required disabled={enviando}
-              className="w-full bg-black/40 border border-slate-600 text-white p-2 focus:outline-none focus:border-slate-300" />
+            <select id="hora" name="hora" value={datosReserva.hora} onChange={handleChange} required disabled={enviando || !datosReserva.fecha || cargandoHorarios}
+              className="w-full bg-black/40 border border-slate-600 text-white p-2 focus:outline-none focus:border-slate-300 disabled:opacity-60">
+              <option value="">{cargandoHorarios ? 'Buscando horarios...' : datosReserva.fecha ? 'Elegí un horario disponible' : 'Primero elegí una fecha'}</option>
+              {horarios.map((hora) => <option key={hora} value={hora}>{formatoHora(hora)}</option>)}
+            </select>
+            {datosReserva.fecha && !cargandoHorarios && horarios.length === 0 && <p className="mt-1 text-sm text-slate-300">No quedan horarios disponibles para este día.</p>}
           </div>
 
           {mensajeError && <p className="border border-slate-500/60 bg-black/30 p-3 text-sm text-slate-200">{mensajeError}</p>}

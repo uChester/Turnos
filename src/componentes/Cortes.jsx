@@ -1,11 +1,10 @@
 // src/componentes/Cortes.jsx
 
 export default function Cortes({ cambiarPantalla }) {
-  // Lista de servicios de la barbería
   const servicios = [
-    { id: 1, nombre: "Corte Tradicional", precio: "$15", desc: "Tijera y máquina con acabado clásico." },
-    { id: 2, nombre: "Barba Completa", precio: "$10", desc: "Perfilado, toalla caliente y bálsamo." },
-    { id: 3, nombre: "Combo Barbería", precio: "$22", desc: "Corte de cabello + arreglo de barba." }
+    { id: 1, nombre: "Corte", precio: "$10.000" },
+    { id: 2, nombre: "Corte y barba", precio: "$11.000" },
+    { id: 3, nombre: "Jubilados", precio: "$5.000" },
   ];
 
   return (
@@ -23,7 +22,6 @@ export default function Cortes({ cambiarPantalla }) {
           >
             <div>
               <h3 className="font-semibold text-lg text-slate-100">{servicio.nombre}</h3>
-              <p className="text-sm text-slate-400">{servicio.desc}</p>
             </div>
             <span className="text-slate-200 font-bold text-xl ml-4">{servicio.precio}</span>
           </div>
