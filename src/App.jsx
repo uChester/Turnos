@@ -1,78 +1,101 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import MenuBarberia from './pages/Memu.jsx';
 import Cortes from './componentes/Cortes.jsx';
 import Reserva from './componentes/Reserva.jsx';
 import Contacto from './componentes/Contacto.jsx';
 import CancelarTurno from './componentes/CancelarTurno.jsx';
 import AgendaDueno from './componentes/AgendaDueno.jsx';
-
-async function solicitarAPI(ruta, opciones = {}) {
-  const respuesta = await fetch(ruta, {
-    headers: { 'Content-Type': 'application/json', ...opciones.headers },
-    ...opciones,
-  });
-  const texto = respuesta.status === 204 ? '' : await respuesta.text();
-  let contenido = null;
-  if (texto) {
-    try {
-      contenido = JSON.parse(texto);
-    } catch {
-      // Una página HTML o una respuesta vacía suele indicar que la API no está desplegada.
-    }
-  }
-
-  if (!respuesta.ok) {
-    const detalle = contenido?.mensaje
-      || (texto ? 'El servidor respondió con un formato inesperado. Verifica que la API esté iniciada.' : 'El servidor no devolvió una respuesta.');
-    throw new Error(detalle);
-  }
-  if (respuesta.status === 204) return null;
-  if (!contenido) throw new Error('La API no devolvió los datos esperados. Verifica que el servidor esté actualizado e iniciado.');
-  return contenido;
-}
+import { supabase } from './superbase.js'; // Ajustado según tu importación actual
 
 export default function App() {
-  const pantallaDesdeEnlace = () => window.location.hash === '#agenda-dueno' ? 'AGENDA DEL DUEÑO' : 'MENU';
-  const [pantallaActual, setPantallaActual] = useState(pantallaDesdeEnlace);
+  const [pantallaActual, setPantallaActual] = useState('MENU');
 
-  useEffect(() => {
-    const actualizarPantalla = () => setPantallaActual(pantallaDesdeEnlace());
-    window.addEventListener('hashchange', actualizarPantalla);
-    return () => window.removeEventListener('hashchange', actualizarPantalla);
-  }, []);
+  // 1. Crear una nueva reserva en Supabase 📝
+  const crearReserva = async (datos) => {
+    const codigo = `BARBER-${Math.floor(100000 + Math.random() * 900000)}`;
+    const { data, error } = await supabase
+      .from('turnos')
+      .insert([
+        {
+          nombre: datos.nombre,
+          telefono: datos.telefono,
+          fecha: datos.fecha,
+          hora: datos.hora,
+          codigo: codigo,
+        },
+      ])
+      .select()
+      .single();
 
-  const cambiarPantalla = (pantalla) => {
-    window.location.hash = pantalla === 'AGENDA DEL DUEÑO' ? 'agenda-dueno' : '';
-    setPantallaActual(pantalla);
+    if (error) throw new Error(`Error al crear la reserva: ${error.message}`);
+    return data;
   };
 
-  const crearReserva = (datos) => solicitarAPI('/api/reservas', {
-    method: 'POST',
-    body: JSON.stringify(datos),
-  });
+  // 2. Consultar disponibilidad según los turnos agendados 🕒
+  const consultarDisponibilidad = async (fecha) => {
+    const horariosPosibles = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+    
+    const { data, error } = await supabase
+      .from('turnos')
+      .select('hora')
+      .eq('fecha', fecha);
 
-  const consultarDisponibilidad = (fecha) => solicitarAPI(`/api/disponibilidad?fecha=${encodeURIComponent(fecha)}`);
+    if (error) throw new Error(`Error al consultar disponibilidad: ${error.message}`);
 
-  const buscarReserva = (codigo) => solicitarAPI(`/api/reservas/${encodeURIComponent(codigo)}`);
+    const horasOcupadas = data.map((t) => t.hora.slice(0, 5)); // Ajuste de formato HH:MM
+    const horarios = horariosPosibles.map((hora) => ({
+      hora,
+      disponible: !horasOcupadas.includes(hora),
+    }));
 
-  const cancelarReservaPorCodigo = (codigo) => solicitarAPI(`/api/reservas/${encodeURIComponent(codigo)}`, {
-    method: 'DELETE',
-  });
+    return { horarios };
+  };
 
-  const consultarAgendaDueno = (fecha, clave) => solicitarAPI(`/api/dueno/reservas?fecha=${encodeURIComponent(fecha)}`, {
-    headers: { Authorization: `Bearer ${clave}` },
-  });
+  // 3. Buscar reserva por código 🔍
+  const buscarReserva = async (codigo) => {
+    const { data, error } = await supabase
+      .from('turnos')
+      .select('*')
+      .eq('codigo', codigo)
+      .single();
 
-  if (pantallaActual === 'MENU') return <MenuBarberia cambiarPantalla={cambiarPantalla} />;
-  if (pantallaActual === 'CORTES Y PRECIOS') return <Cortes cambiarPantalla={cambiarPantalla} />;
+    if (error || !data) throw new Error('No se encontró ninguna reserva con ese código.');
+    return data;
+  };
+
+  // 4. Cancelar reserva por código ❌
+  const cancelarReservaPorCodigo = async (codigo) => {
+    const { error } = await supabase
+      .from('turnos')
+      .delete()
+      .eq('codigo', codigo);
+
+    if (error) throw new Error(`Error al cancelar la reserva: ${error.message}`);
+    return true;
+  };
+
+  // 5. Consultar la agenda completa del dueño para un día 📅
+  const consultarAgendaDueno = async (fecha) => {
+    const { data, error } = await supabase
+      .from('turnos')
+      .select('*')
+      .eq('fecha', fecha)
+      .order('hora', { ascending: true });
+
+    if (error) throw new Error(`Error al obtener la agenda: ${error.message}`);
+    return data;
+  };
+
+  if (pantallaActual === 'MENU') return <MenuBarberia cambiarPantalla={setPantallaActual} />;
+  if (pantallaActual === 'CORTES Y PRECIOS') return <Cortes cambiarPantalla={setPantallaActual} />;
   if (pantallaActual === 'RESERVAR TURNO') {
-    return <Reserva cambiarPantalla={cambiarPantalla} crearReserva={crearReserva} consultarDisponibilidad={consultarDisponibilidad} />;
+    return <Reserva cambiarPantalla={setPantallaActual} crearReserva={crearReserva} consultarDisponibilidad={consultarDisponibilidad} />;
   }
-  if (pantallaActual === 'CONTACTO') return <Contacto cambiarPantalla={cambiarPantalla} />;
+  if (pantallaActual === 'CONTACTO') return <Contacto cambiarPantalla={setPantallaActual} />;
   if (pantallaActual === 'CANCELAR TURNO') {
-    return <CancelarTurno cambiarPantalla={cambiarPantalla} buscarReserva={buscarReserva} cancelarReservaPorCodigo={cancelarReservaPorCodigo} />;
+    return <CancelarTurno cambiarPantalla={setPantallaActual} buscarReserva={buscarReserva} cancelarReservaPorCodigo={cancelarReservaPorCodigo} />;
   }
-  if (pantallaActual === 'AGENDA DEL DUEÑO') return <AgendaDueno cambiarPantalla={cambiarPantalla} consultarAgenda={consultarAgendaDueno} />;
+  if (pantallaActual === 'AGENDA DEL DUEÑO') return <AgendaDueno cambiarPantalla={setPantallaActual} consultarAgenda={consultarAgendaDueno} />;
 
   return <div>Error: Pantalla no encontrada</div>;
 }
