@@ -7,6 +7,24 @@ import CancelarTurno from './componentes/CancelarTurno.jsx';
 import AgendaDueno from './componentes/AgendaDueno.jsx';
 import { supabase } from './superbase.js';
 
+// 🕒 Helper para generar horarios según el día (Lunes-Sábado: 09:00-23:00 / Domingo: 10:00-18:00)
+function obtenerHorariosPorFecha(fechaStr) {
+  if (!fechaStr) return [];
+  const [year, month, day] = fechaStr.split('-').map(Number);
+  const fecha = new Date(year, month - 1, day);
+  const esDomingo = fecha.getDay() === 0; // 0 = Domingo
+
+  const horaInicio = esDomingo ? 10 : 9;
+  const horaFin = esDomingo ? 18 : 23;
+
+  const horarios = [];
+  for (let h = horaInicio; h <= horaFin; h++) {
+    const horaFormateada = `${String(h).padStart(2, '0')}:00`;
+    horarios.push(horaFormateada);
+  }
+  return horarios;
+}
+
 export default function App() {
   const [pantallaActual, setPantallaActual] = useState('MENU');
   const [esPanelDueno, setEsPanelDueno] = useState(false);
@@ -43,7 +61,7 @@ export default function App() {
 
   // 2. Consultar disponibilidad según los turnos agendados 🕒
   const consultarDisponibilidad = async (fecha) => {
-    const horariosPosibles = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+    const horariosPosibles = obtenerHorariosPorFecha(fecha);
     
     const { data, error } = await supabase
       .from('turnos')
@@ -86,7 +104,7 @@ export default function App() {
 
   // 5. Consultar la agenda completa del dueño adaptada a AgendaDueno.jsx 📅
   const consultarAgendaDueno = async (fecha, clave) => {
-    const CLAVE_CORRECTA = 'SantaBarberHouse'; // 👈 Define la clave para el dueño
+    const CLAVE_CORRECTA = 'SantaBarberHouse'; // 👈 Tu clave secreta
     if (clave !== CLAVE_CORRECTA) {
       throw new Error('La clave ingresada es incorrecta.');
     }
@@ -99,7 +117,7 @@ export default function App() {
 
     if (error) throw new Error(`Error al obtener la agenda: ${error.message}`);
 
-    const horariosPosibles = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+    const horariosPosibles = obtenerHorariosPorFecha(fecha);
     const horarios = horariosPosibles.map((hora) => {
       const reservaEncontrada = data.find((t) => t.hora.slice(0, 5) === hora);
       return {

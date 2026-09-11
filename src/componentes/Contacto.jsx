@@ -1,7 +1,7 @@
 // src/componentes/Contacto.jsx
 
 export default function Contacto({ cambiarPantalla }) {
-  const numeroWhatsApp = "5493865232326"; // 💡 Número con código de país
+  const numeroWhatsApp = "5493865265446"; // 💡 Número con código de país
   const mensaje = encodeURIComponent("¡Hola! Quisiera hacer una consulta sobre la barbería.");
 
   const abrirWhatsApp = () => {
